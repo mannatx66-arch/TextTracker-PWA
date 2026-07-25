@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#090d16">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="Track last received and sent texts with live timers">
+    <meta name="description" content="Track last received and sent texts across multiple conversations">
     <title>Text Tracker</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
@@ -41,14 +41,13 @@
             color: var(--text);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100dvh;
             margin: 0;
-            padding: 20px 16px;
+            padding: 20px 16px 40px;
             overflow-x: hidden;
         }
 
-        /* subtle floating orbs */
         .orb {
             position: fixed;
             border-radius: 50%;
@@ -58,24 +57,9 @@
             z-index: 0;
             animation: float 12s ease-in-out infinite;
         }
-        .orb-1 {
-            width: 220px; height: 220px;
-            background: #38bdf8;
-            top: -60px; left: -40px;
-        }
-        .orb-2 {
-            width: 180px; height: 180px;
-            background: #34d399;
-            bottom: 10%; right: -50px;
-            animation-delay: -4s;
-        }
-        .orb-3 {
-            width: 140px; height: 140px;
-            background: #818cf8;
-            top: 40%; left: 60%;
-            animation-delay: -8s;
-            opacity: 0.2;
-        }
+        .orb-1 { width: 220px; height: 220px; background: #38bdf8; top: -60px; left: -40px; }
+        .orb-2 { width: 180px; height: 180px; background: #34d399; bottom: 10%; right: -50px; animation-delay: -4s; }
+        .orb-3 { width: 140px; height: 140px; background: #818cf8; top: 40%; left: 60%; animation-delay: -8s; opacity: 0.2; }
         @keyframes float {
             0%, 100% { transform: translate(0, 0); }
             50% { transform: translate(20px, -30px); }
@@ -88,43 +72,95 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border);
-            padding: 28px 20px 24px;
+            padding: 24px 18px 22px;
             border-radius: 24px;
-            box-shadow:
-                0 25px 50px -12px rgba(0, 0, 0, 0.7),
-                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
             width: 100%;
             max-width: 400px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 28px;
+            margin-bottom: 18px;
         }
-
-        .header .icon {
-            font-size: 36px;
-            margin-bottom: 8px;
-        }
-
+        .header .icon { font-size: 32px; margin-bottom: 6px; }
         .header h1 {
             margin: 0;
-            font-size: 1.6rem;
+            font-size: 1.45rem;
             font-weight: 700;
             letter-spacing: -0.02em;
         }
-
         .header p {
-            margin: 6px 0 0;
+            margin: 4px 0 0;
             color: var(--subtext);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
+
+        /* Thread selector */
+        .thread-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+        .thread-select {
+            flex: 1;
+            background: var(--card-inner);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text);
+            padding: 11px 12px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .thread-select:focus { outline: 1px solid var(--accent-recv); }
+
+        .btn-icon {
+            flex: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-recv);
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-icon:active { transform: scale(0.94); }
+
+        .thread-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .thread-actions button {
+            flex: 1;
+            padding: 9px;
+            font-size: 0.82rem;
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(148, 163, 184, 0.12);
+            color: var(--subtext);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .thread-actions button:active { transform: scale(0.96); }
 
         .card {
             background: var(--card-inner);
             border-radius: 18px;
-            padding: 18px 16px;
-            margin-bottom: 14px;
+            padding: 16px 14px;
+            margin-bottom: 12px;
             border: 1px solid rgba(255,255,255,0.04);
         }
 
@@ -132,11 +168,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .label {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
             color: var(--subtext);
@@ -144,37 +180,32 @@
         }
 
         .badge {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             padding: 3px 8px;
             border-radius: 999px;
             background: rgba(56, 189, 248, 0.15);
             color: var(--accent-recv);
             font-weight: 600;
         }
-
         .badge.sent {
             background: rgba(52, 211, 153, 0.15);
             color: var(--accent-sent);
         }
 
         .timer {
-            font-size: 2.1rem;
+            font-size: 2rem;
             font-weight: 700;
             font-variant-numeric: tabular-nums;
             letter-spacing: -0.03em;
-            margin: 4px 0 12px;
+            margin: 2px 0 10px;
             transition: color 0.3s;
         }
-
         .timer.recv { color: var(--accent-recv); text-shadow: var(--glow-recv); }
         .timer.sent { color: var(--accent-sent); text-shadow: var(--glow-sent); }
         .timer.warn { color: var(--accent-warn); }
         .timer.danger { color: var(--accent-danger); }
 
-        .btn-row {
-            display: flex;
-            gap: 8px;
-        }
+        .btn-row { display: flex; gap: 8px; }
 
         button {
             flex: 1;
@@ -184,21 +215,13 @@
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.15s, opacity 0.15s;
+            transition: transform 0.15s;
             color: #0f172a;
         }
+        button:active { transform: scale(0.96); }
 
-        button:active {
-            transform: scale(0.96);
-        }
-
-        .btn-now-recv {
-            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-        }
-
-        .btn-now-sent {
-            background: linear-gradient(135deg, #34d399, #10b981);
-        }
+        .btn-now-recv { background: linear-gradient(135deg, #38bdf8, #0ea5e9); }
+        .btn-now-sent { background: linear-gradient(135deg, #34d399, #10b981); }
 
         .btn-secondary {
             background: rgba(148, 163, 184, 0.18);
@@ -209,19 +232,18 @@
         .actions {
             display: flex;
             gap: 10px;
-            margin-top: 18px;
+            margin-top: 14px;
         }
-
         .actions button {
             flex: 1;
-            padding: 13px;
-            font-size: 0.92rem;
+            padding: 12px;
+            font-size: 0.9rem;
         }
 
         .hint {
             text-align: center;
-            margin-top: 18px;
-            font-size: 0.78rem;
+            margin-top: 16px;
+            font-size: 0.75rem;
             color: var(--subtext);
             opacity: 0.85;
         }
@@ -242,19 +264,15 @@
             border: 1px solid rgba(56, 189, 248, 0.3);
             pointer-events: none;
         }
-
         .toast.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
 
-        /* install banner */
         .install-banner {
             display: none;
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 0; left: 0; right: 0;
             background: #0f172a;
             padding: 14px 16px;
             border-top: 1px solid rgba(56, 189, 248, 0.25);
@@ -262,24 +280,9 @@
             align-items: center;
             gap: 12px;
         }
-
-        .install-banner.show {
-            display: flex;
-        }
-
-        .install-banner p {
-            flex: 1;
-            margin: 0;
-            font-size: 0.9rem;
-        }
-
-        .install-banner button {
-            flex: none;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 0.85rem;
-        }
-
+        .install-banner.show { display: flex; }
+        .install-banner p { flex: 1; margin: 0; font-size: 0.9rem; }
+        .install-banner button { flex: none; padding: 8px 14px; border-radius: 10px; font-size: 0.85rem; }
         .install-banner .close {
             background: transparent;
             color: var(--subtext);
@@ -298,7 +301,18 @@
         <div class="header">
             <div class="icon">💬</div>
             <h1>Text Tracker</h1>
-            <p>Live response timer</p>
+            <p>Track reply times per conversation</p>
+        </div>
+
+        <!-- Thread selector -->
+        <div class="thread-bar">
+            <select class="thread-select" id="threadSelect" onchange="switchThread(this.value)"></select>
+            <button class="btn-icon" onclick="newThread()" title="New thread">+</button>
+        </div>
+
+        <div class="thread-actions">
+            <button onclick="renameThread()">Rename</button>
+            <button onclick="deleteThread()">Delete</button>
         </div>
 
         <div class="card">
@@ -324,11 +338,11 @@
         </div>
 
         <div class="actions">
-            <button class="btn-secondary" onclick="resetAll()">Reset All</button>
+            <button class="btn-secondary" onclick="resetCurrent()">Reset This</button>
             <button class="btn-secondary" onclick="copyStatus()">Copy Status</button>
         </div>
 
-        <p class="hint">Add to Home Screen for full-screen app feel</p>
+        <p class="hint">Each conversation keeps its own timers</p>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -340,40 +354,143 @@
     </div>
 
     <script>
-        let recvTime = null;
-        let sentTime = null;
-        let sentCount = 0;
+        // ===== Data =====
+        let data = { activeId: null, threads: {} };
 
         const recvTimerEl = document.getElementById('recvTimer');
         const sentTimerEl = document.getElementById('sentTimer');
         const recvBadge = document.getElementById('recvBadge');
         const sentBadge = document.getElementById('sentBadge');
+        const threadSelect = document.getElementById('threadSelect');
+
+        function save() {
+            localStorage.setItem('textTrackerData', JSON.stringify(data));
+        }
+
+        function getActive() {
+            return data.threads[data.activeId] || null;
+        }
 
         function load() {
             try {
-                const data = JSON.parse(localStorage.getItem('textTracker') || '{}');
-                recvTime = data.recvTime || null;
-                sentTime = data.sentTime || null;
-                sentCount = data.sentCount || 0;
-            } catch (e) {}
+                const raw = localStorage.getItem('textTrackerData');
+                if (raw) {
+                    data = JSON.parse(raw);
+                } else {
+                    // Migrate old single-timer data if present
+                    const old = JSON.parse(localStorage.getItem('textTracker') || 'null');
+                    if (old) {
+                        const id = 'default';
+                        data.threads[id] = {
+                            name: 'Default',
+                            recvTime: old.recvTime || null,
+                            sentTime: old.sentTime || null,
+                            sentCount: old.sentCount || 0
+                        };
+                        data.activeId = id;
+                        localStorage.removeItem('textTracker');
+                        save();
+                    } else {
+                        // First run – create one thread
+                        createThread('My first thread', false);
+                    }
+                }
+            } catch (e) {
+                createThread('My first thread', false);
+            }
+
+            if (!data.activeId || !data.threads[data.activeId]) {
+                const ids = Object.keys(data.threads);
+                if (ids.length) data.activeId = ids[0];
+                else createThread('My first thread', false);
+            }
+
+            populateSelect();
             updateUI();
         }
 
-        function save() {
-            localStorage.setItem('textTracker', JSON.stringify({
-                recvTime, sentTime, sentCount
-            }));
+        function createThread(name, promptUser = true) {
+            let finalName = name;
+            if (promptUser) {
+                finalName = prompt('Name for this conversation:', name || 'New thread');
+                if (!finalName || !finalName.trim()) return;
+                finalName = finalName.trim();
+            }
+            const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+            data.threads[id] = {
+                name: finalName,
+                recvTime: null,
+                sentTime: null,
+                sentCount: 0
+            };
+            data.activeId = id;
+            save();
+            populateSelect();
+            updateUI();
+            showToast('Thread created');
+        }
+
+        function newThread() {
+            createThread('New thread', true);
+        }
+
+        function switchThread(id) {
+            if (data.threads[id]) {
+                data.activeId = id;
+                save();
+                updateUI();
+            }
+        }
+
+        function renameThread() {
+            const t = getActive();
+            if (!t) return;
+            const newName = prompt('Rename thread:', t.name);
+            if (!newName || !newName.trim()) return;
+            t.name = newName.trim();
+            save();
+            populateSelect();
+            showToast('Renamed');
+        }
+
+        function deleteThread() {
+            const t = getActive();
+            if (!t) return;
+            if (Object.keys(data.threads).length <= 1) {
+                showToast('Keep at least one thread');
+                return;
+            }
+            if (!confirm(`Delete "${t.name}"?`)) return;
+            delete data.threads[data.activeId];
+            data.activeId = Object.keys(data.threads)[0];
+            save();
+            populateSelect();
+            updateUI();
+            showToast('Deleted');
+        }
+
+        function populateSelect() {
+            threadSelect.innerHTML = '';
+            Object.entries(data.threads).forEach(([id, t]) => {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = t.name;
+                if (id === data.activeId) opt.selected = true;
+                threadSelect.appendChild(opt);
+            });
         }
 
         function setNow(type) {
+            const t = getActive();
+            if (!t) return;
             const now = Date.now();
             if (type === 'recv') {
-                recvTime = now;
+                t.recvTime = now;
                 if (navigator.vibrate) navigator.vibrate(30);
                 showToast('Received marked');
             } else {
-                sentTime = now;
-                sentCount++;
+                t.sentTime = now;
+                t.sentCount++;
                 if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
                 showToast('Sent +1');
             }
@@ -381,11 +498,13 @@
             updateUI();
         }
 
-        function resetAll() {
-            if (!confirm('Reset all timers and counter?')) return;
-            recvTime = null;
-            sentTime = null;
-            sentCount = 0;
+        function resetCurrent() {
+            const t = getActive();
+            if (!t) return;
+            if (!confirm(`Reset timers for "${t.name}"?`)) return;
+            t.recvTime = null;
+            t.sentTime = null;
+            t.sentCount = 0;
             save();
             updateUI();
             showToast('Reset');
@@ -412,41 +531,48 @@
         }
 
         function updateUI() {
+            const t = getActive();
+            if (!t) return;
+
             const now = Date.now();
-            if (recvTime) {
-                const elapsed = now - recvTime;
+
+            if (t.recvTime) {
+                const elapsed = now - t.recvTime;
                 recvTimerEl.textContent = formatElapsed(elapsed);
                 updateColor(recvTimerEl, elapsed);
-                recvBadge.textContent = 'Last: ' + new Date(recvTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                recvBadge.textContent = 'Last: ' + new Date(t.recvTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             } else {
                 recvTimerEl.textContent = '—';
                 recvTimerEl.classList.remove('warn', 'danger');
                 recvBadge.textContent = '—';
             }
-            if (sentTime) {
-                const elapsed = now - sentTime;
+
+            if (t.sentTime) {
+                const elapsed = now - t.sentTime;
                 sentTimerEl.textContent = formatElapsed(elapsed);
                 updateColor(sentTimerEl, elapsed);
-                sentBadge.textContent = sentCount + ' Sent';
+                sentBadge.textContent = t.sentCount + ' Sent';
             } else {
                 sentTimerEl.textContent = '—';
                 sentTimerEl.classList.remove('warn', 'danger');
-                sentBadge.textContent = sentCount + ' Sent';
+                sentBadge.textContent = t.sentCount + ' Sent';
             }
         }
 
         function copyStatus() {
-            const r = recvTime ? formatElapsed(Date.now() - recvTime) : 'never';
-            const s = sentTime ? formatElapsed(Date.now() - sentTime) : 'never';
-            const text = `Text Tracker\nLast received: ${r}\nLast sent: ${s} (${sentCount} total)`;
+            const t = getActive();
+            if (!t) return;
+            const r = t.recvTime ? formatElapsed(Date.now() - t.recvTime) : 'never';
+            const s = t.sentTime ? formatElapsed(Date.now() - t.sentTime) : 'never';
+            const text = `Text Tracker — ${t.name}\nLast received: ${r}\nLast sent: ${s} (${t.sentCount} total)`;
             navigator.clipboard.writeText(text).then(() => showToast('Copied')).catch(() => showToast('Copy failed'));
         }
 
         function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 1800);
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 1800);
         }
 
         // PWA install
@@ -460,7 +586,7 @@
         document.getElementById('installBtn').addEventListener('click', async () => {
             if (!deferredPrompt) return;
             deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
+            await deferredPrompt.userChoice;
             deferredPrompt = null;
             document.getElementById('installBanner').classList.remove('show');
         });
@@ -469,7 +595,6 @@
             document.getElementById('installBanner').classList.remove('show');
         });
 
-        // Service worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js').catch(console.error);
         }
