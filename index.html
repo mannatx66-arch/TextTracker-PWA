@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#090d16">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Track last received and sent texts with live timers">
+    <title>Text Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        :root {
+            --bg: #070b14;
+            --card: rgba(19, 27, 46, 0.78);
+            --card-inner: rgba(26, 36, 61, 0.65);
+            --border: rgba(56, 189, 248, 0.18);
+            --accent-recv: #38bdf8;
+            --accent-sent: #34d399;
+            --accent-warn: #fbbf24;
+            --accent-danger: #f87171;
+            --text: #f8fafc;
+            --subtext: #94a3b8;
+            --glow-recv: 0 0 24px rgba(56, 189, 248, 0.35);
+            --glow-sent: 0 0 24px rgba(52, 211, 153, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.12), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(52, 211, 153, 0.08), transparent);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100dvh;
+            margin: 0;
+            padding: 20px 16px;
+            overflow-x: hidden;
+        }
+
+        /* subtle floating orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 0;
+            animation: float 12s ease-in-out infinite;
+        }
+        .orb-1 {
+            width: 220px; height: 220px;
+            background: #38bdf8;
+            top: -60px; left: -40px;
+        }
+        .orb-2 {
+            width: 180px; height: 180px;
+            background: #34d399;
+            bottom: 10%; right: -50px;
+            animation-delay: -4s;
+        }
+        .orb-3 {
+            width: 140px; height: 140px;
+            background: #818cf8;
+            top: 40%; left: 60%;
+            animation-delay: -8s;
+            opacity: 0.2;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, -30px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            padding: 28px 20px 24px;
+            border-radius: 24px;
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header .icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            margin: 6px 0 0;
+            color: var(--subtext);
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: var(--card-inner);
+            border-radius: 18px;
+            padding: 18px 16px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--subtext);
+            font-weight: 600;
+        }
+
+        .badge {
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-recv);
+            font-weight: 600;
+        }
+
+        .badge.sent {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-sent);
+        }
+
+        .timer {
+            font-size: 2.1rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.03em;
+            margin: 4px 0 12px;
+            transition: color 0.3s;
+        }
+
+        .timer.recv { color: var(--accent-recv); text-shadow: var(--glow-recv); }
+        .timer.sent { color: var(--accent-sent); text-shadow: var(--glow-sent); }
+        .timer.warn { color: var(--accent-warn); }
+        .timer.danger { color: var(--accent-danger); }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.15s;
+            color: #0f172a;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-now-recv {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+        }
+
+        .btn-now-sent {
+            background: linear-gradient(135deg, #34d399, #10b981);
+        }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.18);
+            color: var(--text);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .actions button {
+            flex: 1;
+            padding: 13px;
+            font-size: 0.92rem;
+        }
+
+        .hint {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 0.78rem;
+            color: var(--subtext);
+            opacity: 0.85;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(15, 23, 42, 0.95);
+            color: #f1f5f9;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            opacity: 0;
+            transition: all 0.25s;
+            z-index: 100;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* install banner */
+        .install-banner {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            padding: 14px 16px;
+            border-top: 1px solid rgba(56, 189, 248, 0.25);
+            z-index: 50;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .install-banner.show {
+            display: flex;
+        }
+
+        .install-banner p {
+            flex: 1;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .install-banner button {
+            flex: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+
+        .install-banner .close {
+            background: transparent;
+            color: var(--subtext);
+            border: none;
+            font-size: 1.2rem;
+            padding: 4px 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="icon">💬</div>
+            <h1>Text Tracker</h1>
+            <p>Live response timer</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="label">Last Received</span>
+                <span class="badge" id="recvBadge">—</span>
+            </div>
+            <div class="timer recv" id="recvTimer">—</div>
+            <div class="btn-row">
+                <button class="btn-now-recv" onclick="setNow('recv')">Now</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="label">Last Sent</span>
+                <span class="badge sent" id="sentBadge">0 Sent</span>
+            </div>
+            <div class="timer sent" id="sentTimer">—</div>
+            <div class="btn-row">
+                <button class="btn-now-sent" onclick="setNow('sent')">+1 Sent</button>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-secondary" onclick="resetAll()">Reset All</button>
+            <button class="btn-secondary" onclick="copyStatus()">Copy Status</button>
+        </div>
+
+        <p class="hint">Add to Home Screen for full-screen app feel</p>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="install-banner" id="installBanner">
+        <p>Install Text Tracker?</p>
+        <button class="btn-now-recv" id="installBtn">Install</button>
+        <button class="close" id="installClose">✕</button>
+    </div>
+
+    <script>
+        let recvTime = null;
+        let sentTime = null;
+        let sentCount = 0;
+
+        const recvTimerEl = document.getElementById('recvTimer');
+        const sentTimerEl = document.getElementById('sentTimer');
+        const recvBadge = document.getElementById('recvBadge');
+        const sentBadge = document.getElementById('sentBadge');
+
+        function load() {
+            try {
+                const data = JSON.parse(localStorage.getItem('textTracker') || '{}');
+                recvTime = data.recvTime || null;
+                sentTime = data.sentTime || null;
+                sentCount = data.sentCount || 0;
+            } catch (e) {}
+            updateUI();
+        }
+
+        function save() {
+            localStorage.setItem('textTracker', JSON.stringify({
+                recvTime, sentTime, sentCount
+            }));
+        }
+
+        function setNow(type) {
+            const now = Date.now();
+            if (type === 'recv') {
+                recvTime = now;
+                if (navigator.vibrate) navigator.vibrate(30);
+                showToast('Received marked');
+            } else {
+                sentTime = now;
+                sentCount++;
+                if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
+                showToast('Sent +1');
+            }
+            save();
+            updateUI();
+        }
+
+        function resetAll() {
+            if (!confirm('Reset all timers and counter?')) return;
+            recvTime = null;
+            sentTime = null;
+            sentCount = 0;
+            save();
+            updateUI();
+            showToast('Reset');
+        }
+
+        function formatElapsed(ms) {
+            if (ms == null) return '—';
+            const s = Math.floor(ms / 1000);
+            const m = Math.floor(s / 60);
+            const h = Math.floor(m / 60);
+            const d = Math.floor(h / 24);
+            if (d > 0) return d + 'd ' + (h % 24) + 'h';
+            if (h > 0) return h + 'h ' + (m % 60) + 'm';
+            if (m > 0) return m + 'm ' + (s % 60) + 's';
+            return s + 's';
+        }
+
+        function updateColor(el, ms) {
+            el.classList.remove('warn', 'danger');
+            if (ms == null) return;
+            const mins = ms / 60000;
+            if (mins >= 60) el.classList.add('danger');
+            else if (mins >= 15) el.classList.add('warn');
+        }
+
+        function updateUI() {
+            const now = Date.now();
+            if (recvTime) {
+                const elapsed = now - recvTime;
+                recvTimerEl.textContent = formatElapsed(elapsed);
+                updateColor(recvTimerEl, elapsed);
+                recvBadge.textContent = 'Last: ' + new Date(recvTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            } else {
+                recvTimerEl.textContent = '—';
+                recvTimerEl.classList.remove('warn', 'danger');
+                recvBadge.textContent = '—';
+            }
+            if (sentTime) {
+                const elapsed = now - sentTime;
+                sentTimerEl.textContent = formatElapsed(elapsed);
+                updateColor(sentTimerEl, elapsed);
+                sentBadge.textContent = sentCount + ' Sent';
+            } else {
+                sentTimerEl.textContent = '—';
+                sentTimerEl.classList.remove('warn', 'danger');
+                sentBadge.textContent = sentCount + ' Sent';
+            }
+        }
+
+        function copyStatus() {
+            const r = recvTime ? formatElapsed(Date.now() - recvTime) : 'never';
+            const s = sentTime ? formatElapsed(Date.now() - sentTime) : 'never';
+            const text = `Text Tracker\nLast received: ${r}\nLast sent: ${s} (${sentCount} total)`;
+            navigator.clipboard.writeText(text).then(() => showToast('Copied')).catch(() => showToast('Copy failed'));
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 1800);
+        }
+
+        // PWA install
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBanner').classList.add('show');
+        });
+
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById('installBanner').classList.remove('show');
+        });
+
+        document.getElementById('installClose').addEventListener('click', () => {
+            document.getElementById('installBanner').classList.remove('show');
+        });
+
+        // Service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(console.error);
+        }
+
+        load();
+        setInterval(updateUI, 1000);
+    </script>
+</body>
+</html>
